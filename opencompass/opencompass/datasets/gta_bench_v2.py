@@ -6,8 +6,11 @@ import copy
 import re
 
 import numpy as np
-from datasets.arrow_dataset import Dataset
-from sentence_transformers import SentenceTransformer, util
+try:
+    from sentence_transformers import SentenceTransformer, util
+except ImportError:
+    SentenceTransformer = None
+    util = None
 
 from opencompass.openicl.icl_evaluator import BaseEvaluator
 from opencompass.registry import ICL_EVALUATORS, LOAD_DATASET

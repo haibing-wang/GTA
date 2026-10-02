@@ -122,7 +122,7 @@ GTA-2 supports three evaluation modes depending on your setup.
 
 The following instructions focus on **GTA-Workflow** evaluation of default setup.
 For **GTA-Atomic (original GTA)** evaluation, please refer to  
-[README_GTA1.md](README_GTA1.md). The codebase remains compatible.
+[README_GTA-1.md](README_GTA-1.md). The codebase remains compatible.
 
 ### Prepare GTA-2 Dataset
 1. Clone this repo.

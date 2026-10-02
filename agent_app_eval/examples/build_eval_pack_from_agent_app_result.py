@@ -103,8 +103,8 @@ def main() -> None:
     )
     ap.add_argument(
         "--task-ids",
-        default="analysis/human_eval_gpt5_stratified_mini_20260312_pack/selected_task_ids.txt",
-        help="Path to selected_task_ids.txt",
+        default=None,
+        help="Optional path to selected_task_ids.txt. If omitted, task IDs are inferred from result-dir subdirectories or end.json",
     )
     ap.add_argument(
         "--result-dir",
@@ -121,7 +121,12 @@ def main() -> None:
 
     repo = _repo_root()
     end_path = (repo / args.dataset_end_json).resolve() if not os.path.isabs(args.dataset_end_json) else Path(args.dataset_end_json)
-    task_ids_path = (repo / args.task_ids).resolve() if not os.path.isabs(args.task_ids) else Path(args.task_ids)
+
+    if not end_path.exists():
+        raise FileNotFoundError(
+            f"Dataset end.json not found at {end_path}. "
+            "Please download GTA-Workflow dataset to opencompass/data/gta_dataset_v2/ or specify --dataset-end-json."
+        )
 
     result_dir = (repo / args.result_dir).resolve() if not os.path.isabs(args.result_dir) else Path(args.result_dir).resolve()
     out_pack = (repo / args.out_pack).resolve() if not os.path.isabs(args.out_pack) else Path(args.out_pack).resolve()
@@ -129,7 +134,22 @@ def main() -> None:
     end_json = json.loads(end_path.read_text(encoding="utf-8"))
     indexed = _index_end_json(end_json)
 
-    task_ids = _load_task_ids(task_ids_path)
+    task_ids_path: Optional[Path] = None
+    if args.task_ids:
+        task_ids_path = (repo / args.task_ids).resolve() if not os.path.isabs(args.task_ids) else Path(args.task_ids)
+        if not task_ids_path.exists():
+            raise FileNotFoundError(f"Specified task-ids file not found: {task_ids_path}")
+        task_ids = _load_task_ids(task_ids_path)
+    else:
+        # Auto-infer task IDs from numeric subdirectories in result_dir
+        inferred = [
+            int(p.name) for p in result_dir.iterdir()
+            if p.is_dir() and p.name.isdigit() and int(p.name) in indexed
+        ] if result_dir.exists() else []
+        if inferred:
+            task_ids = sorted(inferred)
+        else:
+            task_ids = sorted(indexed.keys())
 
     tasks: List[Dict[str, Any]] = []
     for i, tid in enumerate(task_ids, start=1):
@@ -168,7 +188,7 @@ def main() -> None:
         "generated_from": {
             "backend": "agent_app",
             "dataset_end_json": _rel_from_repo(end_path),
-            "task_ids": _rel_from_repo(task_ids_path),
+            "task_ids": _rel_from_repo(task_ids_path) if task_ids_path is not None else "auto",
             "result_dir": _rel_from_repo(result_dir),
         },
         "tasks": tasks,

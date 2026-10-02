@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.env
+*.tmp*
+.DS_Store
+
+# Eval artifacts & outputs
+agent_app_eval/runs/
+agent_app_eval/agent_app_result/
+*.log
+
+# Data
+opencompass/data/

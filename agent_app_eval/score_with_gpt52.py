@@ -32,7 +32,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[2]
+    # agent_app_eval/ -> GTA/
+    return Path(__file__).resolve().parents[1]
 
 
 def _relpath_from_repo(path: Path) -> str:

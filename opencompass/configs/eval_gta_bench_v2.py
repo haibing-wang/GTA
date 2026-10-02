@@ -9,6 +9,7 @@
 # 2. 工具加载方式从agentlego改为langchain tools
 # 3. 保持评测数据集和流程不变
 
+import os
 from mmengine.config import read_base
 from lagent.agents import ReAct
 from lagent.agents.react import ReActProtocol
@@ -164,15 +165,15 @@ models = [
             max_turn=10,
             llm=dict(
                 type=OpenAI,
-                path='gpt-5-2025-08-07',
-                key='EMPTY',
-                openai_api_base='https://ai.nengyongai.cn/v1/chat/completions',
+                path=os.getenv('OPENAI_MODEL_NAME', 'gpt-5-2025-08-07'),
+                key=os.getenv('OPENAI_API_KEY', 'EMPTY'),
+                openai_api_base=os.getenv('OPENAI_API_BASE', 'https://ai.nengyongai.cn/v1/chat/completions'),
                 query_per_second=1,
                 max_seq_len=131072,
             ), 
             # protocol=protocol,
-            tool_server='http://127.0.1.1:16181',
-            tool_meta='data/gta_dataset_v2/toolmeta.json',
+            tool_server=os.getenv('GTA_TOOL_SERVER', 'http://127.0.1.1:16181'),
+            tool_meta=os.getenv('OPENCOMPASS_TOOLMETA_PATH', 'data/gta_dataset_v2/toolmeta.json'),
             batch_size=8,
         ),
     # dict(
