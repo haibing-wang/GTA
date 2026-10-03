@@ -9,8 +9,18 @@ REGISTRY = Registry('helper')
 
 try:
     import lagent
+    try:
+        import agentlego.tools
+    except (ImportError, AttributeError):
+        import sys
+        from pathlib import Path
+        repo_root = Path(__file__).resolve().parents[3]
+        lego_dir = repo_root / 'agentlego'
+        if lego_dir.exists() and str(lego_dir) not in sys.path:
+            sys.path.insert(0, str(lego_dir))
+        import agentlego.tools
     import agentlego
-except ImportError:
+except Exception:
     lagent = None
     agentlego = None
 
@@ -62,15 +72,22 @@ def _patch_lagent_action_executor_split():
     _ActionExecutor.__call__ = _safe_call
     setattr(_ActionExecutor, '_opencompass_safe_split_patched', True)
 
-class DummyTool(agentlego.tools.BaseTool):
+if agentlego is not None and hasattr(agentlego, 'tools'):
+    class DummyTool(agentlego.tools.BaseTool):
+        def __init__(self, toolmeta):
+            self.toolmeta = agentlego.schema.ToolMeta.from_json_dict(toolmeta)
+            self.set_parser(agentlego.parsers.DefaultParser)
+            self._is_setup = False
 
-    def __init__(self, toolmeta):
-        self.toolmeta = agentlego.schema.ToolMeta.from_json_dict(toolmeta)
-        self.set_parser(agentlego.parsers.DefaultParser)
-        self._is_setup = False
+        def apply(self, *args, **kwargs):
+            return 'Dummy Result'
+else:
+    class DummyTool:
+        def __init__(self, *args, **kwargs):
+            pass
 
-    def apply(self, *args, **kwargs):
-        return 'Dummy Result'
+        def to_lagent(self):
+            return self
 
 def dummy_action_executor(tools):
     return lagent.ActionExecutor(

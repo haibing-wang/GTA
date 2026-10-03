@@ -97,9 +97,10 @@ def parse_requirements(fname='requirements.txt', with_version=True):
 
 def get_version():
     version_file = 'opencompass/__init__.py'
+    _loc = {}
     with open(version_file, 'r', encoding='utf-8') as f:
-        exec(compile(f.read(), version_file, 'exec'))
-    return locals()['__version__']
+        exec(compile(f.read(), version_file, 'exec'), _loc)
+    return _loc['__version__']
 
 
 def do_setup():

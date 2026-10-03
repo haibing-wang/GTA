@@ -165,9 +165,9 @@ conda activate opencompass
 cd opencompass
 
 # 设置环境变量
-export OPENAI_API_BASE="http://127.0.0.1:12580/v1/chat/completions" # 你的模型接口
+export OPENAI_API_BASE="http://127.0.0.1:11434/v1/chat/completions" # 你的模型接口
 export OPENAI_API_KEY="EMPTY"                                        # 本地模型设为 EMPTY
-export OPENAI_MODEL_NAME="qwen1.5-7b-chat"                           # 目标模型名
+export OPENAI_MODEL_NAME="gemma4:latest"                           # 目标模型名
 export GTA_TOOL_SERVER="http://127.0.0.1:16181"                     # 工具服务地址
 export OPENCOMPASS_TOOLMETA_PATH="data/gta_dataset_v2/toolmeta.json"
 
@@ -304,12 +304,21 @@ python scripts/check_gta_env.py
    - 修复了 `agent_app_eval/score_with_gpt52.py` 和 `agent_app_eval/run_agents.py` 中 `_repo_root()` 使用 `parents[2]` 导致寻址越界到上级目录的错误，更正为精准指向 GTA 仓库根目录。
 2. **修复 `build_eval_pack_from_agent_app_result.py` 强依赖不存在的固定文件**：
    - 将必选的 `--task-ids` 优化为可选参数，支持自动从 Agent 产物子目录自动识别数字 Task ID，并增加了对 `end.json` 不存在时的清晰错误提示。
-3. **解除未使用的强制重依赖**：
-   - 优化 `opencompass/opencompass/datasets/gta_bench_v2.py`，将未实际使用但会导致环境报错的 `sentence_transformers` 改为安全导入，降低环境依赖门槛。
-4. **动态环境变量支持**：
-   - 优化 `opencompass/configs/eval_gta_bench_v2.py`，支持 `OPENAI_API_BASE`、`OPENAI_API_KEY`、`OPENAI_MODEL_NAME`、`GTA_TOOL_SERVER` 等环境变量，不再需要对代码进行硬编码修改。
-5. **文档链接纠错**：
+3. **解除未使用的强制重依赖与兼容性导入**：
+   - 优化 `opencompass/opencompass/datasets/gta_bench_v2.py`，将未实际使用但会导致环境报错的 `sentence_transformers` 改为安全导入，并完善了 `datasets.Dataset` 的导入回退机制。
+4. **修复 `end.json` 列表格式解析崩溃 Bug**：
+   - 修复了 `opencompass/datasets/gta_bench_v2.py` 中假定数据集必须为字典直接调用 `.items()` 导致的 `AttributeError: 'list' object has no attribute 'items'` 异常，同时支持字典格式与列表格式题目数据。
+5. **修复 MMEngine 惰性配置解析异常**：
+   - 修复了 `opencompass/configs/datasets/gta_bench_ai.py` 中在惰性加载块内调用 `os.getenv` 导致 MMEngine 抛出 `RuntimeError` 的问题。
+6. **修复目录同名包遮蔽与 DummyTool 兼容性**：
+   - 修复了在工作区根目录下执行代码时同名目录 `agentlego/` 遮蔽安装包的问题，并在 `lagent.py` 中对 `DummyTool` 增加容错回退机制。
+7. **Python 3.13 环境构建兼容**：
+   - 修复了 `opencompass/setup.py` 中 `get_version()` 在 Python 3.13 下受 PEP 667 `locals()` 语义变更影响导致的安装失败问题。
+8. **文档链接纠错**：
    - 修正根目录 `README.md` 中指向已更名文件 `README_GTA1.md` 的断链，更新为 `README_GTA-1.md`。
-6. **提供配套实用工具**：
+9. **提供配套实用工具**：
    - 新增 `scripts/check_gta_env.py`：开箱即用的环境与数据集诊断工具。
    - 新增 `scripts/download_dataset.py`：官方数据集自动下载解压脚本。
+10. **端到端流程验证**：
+    - 完成了 `agent_app_eval` 产物转换与打分干跑校验；
+    - 完成了 `opencompass` 评测配置全量校验，`python run.py configs/eval_gta_bench_v2.py --dry-run` 任务划分与依赖加载 100% 通过（Exit Code 0）。

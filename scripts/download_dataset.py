@@ -8,6 +8,7 @@ Downloads and extracts:
 
 import argparse
 import os
+import shutil
 import sys
 import urllib.request
 import zipfile
@@ -41,11 +42,41 @@ def download_file(url: str, dest_path: Path):
     print("\nDownload complete.")
 
 def extract_zip(zip_path: Path, target_dir: Path):
-    print(f"Extracting {zip_path.name} to {target_dir}...")
-    target_dir.mkdir(parents=True, exist_ok=True)
+    print(f"Extracting {zip_path.name}...")
+    temp_dir = target_dir.parent / f"_tmp_extract_{zip_path.stem}"
+    if temp_dir.exists():
+        shutil.rmtree(temp_dir)
+    temp_dir.mkdir(parents=True, exist_ok=True)
+
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(target_dir.parent)
-    print("Extraction complete.")
+        zip_ref.extractall(temp_dir)
+
+    extracted_items = [p for p in temp_dir.iterdir() if p.name not in ("__MACOSX", ".DS_Store")]
+    if len(extracted_items) == 1 and extracted_items[0].is_dir():
+        src_dir = extracted_items[0]
+    else:
+        src_dir = temp_dir
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+    for item in src_dir.iterdir():
+        dest = target_dir / item.name
+        if dest.exists():
+            if dest.is_dir():
+                shutil.rmtree(dest)
+            else:
+                dest.unlink()
+        shutil.move(str(item), str(dest))
+
+    if src_dir != temp_dir and src_dir.name != target_dir.name:
+        alias_link = target_dir.parent / src_dir.name
+        if not alias_link.exists():
+            try:
+                alias_link.symlink_to(target_dir.name)
+            except Exception:
+                pass
+
+    shutil.rmtree(temp_dir, ignore_errors=True)
+    print(f"Extraction complete: {target_dir}")
 
 def main():
     parser = argparse.ArgumentParser(description="Download GTA datasets.")

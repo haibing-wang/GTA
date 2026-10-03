@@ -7,6 +7,14 @@ import re
 
 import numpy as np
 try:
+    from datasets import Dataset
+except ImportError:
+    try:
+        from datasets.arrow_dataset import Dataset
+    except ImportError:
+        Dataset = None
+
+try:
     from sentence_transformers import SentenceTransformer, util
 except ImportError:
     SentenceTransformer = None
@@ -241,7 +249,13 @@ class GTABenchDataset(BaseDataset):
                 all_tools = []
 
             data_list = []
-            for idx, item in data.items():
+            if isinstance(data, dict):
+                items_iter = data.items()
+            elif isinstance(data, list):
+                items_iter = [(item.get('task_id', idx), item) for idx, item in enumerate(data)]
+            else:
+                items_iter = []
+            for idx, item in items_iter:
                 # parsed 形式
                 dialogs_parsed = organize_dialogs(item, str(data_root.absolute()))
                 # 合并全量工具 meta（向后兼容）

@@ -11,5 +11,8 @@ agent_app_eval/runs/
 agent_app_eval/agent_app_result/
 *.log
 
-# Data
+# Data & outputs
 opencompass/data/
+outputs/
+opencompass/outputs/
+

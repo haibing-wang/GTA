@@ -17,6 +17,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+for p in [str(REPO_ROOT / "opencompass"), str(REPO_ROOT / "agentlego")]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
+
 def color(text: str, code: str) -> str:
     if sys.stdout.isatty():
         return f"\033[{code}m{text}\033[0m"

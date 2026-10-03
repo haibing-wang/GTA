@@ -25,7 +25,7 @@ gta_bench_infer_cfg_end = dict(
 )
 
 gta_bench_eval_cfg_end = dict(
-    evaluator=dict(type=GPTEvaluator, mode='every', proxy=os.getenv('EVAL_PROXY')))
+    evaluator=dict(type=GPTEvaluator, mode='every'))
 
 gta_bench_datasets = [
     dict(
